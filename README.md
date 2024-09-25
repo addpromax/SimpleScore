@@ -17,13 +17,16 @@ Also comes with support for both [PlaceholderAPI][PlaceholderAPI] and [MVdWPlace
 ## Main Features
 - A lag-free, fully animated scoreboard with no flickering
 - Full RGB colour support on 1.16 servers or newer
-- Supports all major Minecraft versions from 1.8.x to 1.20.x
+- Supports all major Minecraft versions from 1.8.x to 1.21.x
 - Can display scoreboards based on permissions, conditions, worlds and regions
 - No character limit on 1.13 servers or newer (limited to 32 characters on older versions)*
 - Fully compatible with [mcMMO][mcMMO] and other plugins that temporarily change the scoreboard*
 - Any message sent by the plugin can be modified either by the built-in translation system or by providing a custom message file
 
 *This feature requires [ProtocolLib][ProtocolLib]. Adding [ProtocolLib][ProtocolLib] to your server will improve plugin compatibility and also reduce the number of packets sent to players, thus improving server/client performance and reducing network bandwidth usage.
+
+## Known Issues
+- Using an up-to-date version of ProtocolLib (>=5.1.0) *may* cause issues with 1.8-1.20. To circumvent this, temporarily downgrade to ProtocolLib 5.0.0 until this is resolved (possible issue but untested, **ONLY NECESSARY IF YOU USE <=1.20**)
 
 ## More Information
 ### [Installation](https://github.com/r4g3baby/SimpleScore/wiki/Installation) - [Configuration](https://github.com/r4g3baby/SimpleScore/wiki/Configuration) - [Commands](https://github.com/r4g3baby/SimpleScore/wiki/Commands)
