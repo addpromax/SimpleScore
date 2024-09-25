@@ -8,12 +8,14 @@ import com.comphenix.protocol.utility.MinecraftVersion
 import com.comphenix.protocol.wrappers.EnumWrappers
 import com.comphenix.protocol.wrappers.WrappedChatComponent.fromLegacyText
 import com.comphenix.protocol.wrappers.WrappedChatComponent.fromText
+import com.comphenix.protocol.wrappers.WrappedTeamParameters
 import com.r4g3baby.simplescore.scoreboard.models.PlayerBoard
 import org.bukkit.entity.Player
 import org.bukkit.scoreboard.DisplaySlot
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
+// todo: update all applicable packets to latest ProtocolLib
 class ProtocolScoreboard : ScoreboardHandler() {
     private val protocolManager = ProtocolLibrary.getProtocolManager()
 
@@ -22,13 +24,17 @@ class ProtocolScoreboard : ScoreboardHandler() {
     private val afterCavesAndCliffsUpdate = MinecraftVersion("1.17").atOrAbove()
     private val afterTrailsAndTailsDot2Update = MinecraftVersion("1.20.2").atOrAbove()
     private val afterTrailsAndTailsDot4Update = MinecraftVersion("1.20.4").atOrAbove()
+    private val afterTrickyTrialsUpdate = MinecraftVersion("1.21").atOrAbove()
 
     private val playerBoards = ConcurrentHashMap(HashMap<UUID, PlayerBoard>())
 
     override fun createScoreboard(player: Player) {
         playerBoards.computeIfAbsent(player.uniqueId) {
             var packet = PacketContainer(PacketType.Play.Server.SCOREBOARD_OBJECTIVE)
-            packet.modifier.writeDefaults()
+            if (!afterTrickyTrialsUpdate) {
+                // Defaults mess with NumberFormat after 1.21
+                packet.modifier.writeDefaults()
+            }
             packet.strings.write(0, getPlayerIdentifier(player)) // Objective Name
             packet.integers.write(0, 0) // Mode 0: Created Scoreboard
             if (afterAquaticUpdate) {
@@ -51,7 +57,9 @@ class ProtocolScoreboard : ScoreboardHandler() {
     override fun removeScoreboard(player: Player) {
         playerBoards.remove(player.uniqueId)?.also { playerBoard ->
             var packet = PacketContainer(PacketType.Play.Server.SCOREBOARD_OBJECTIVE)
-            packet.modifier.writeDefaults()
+            if (!afterTrickyTrialsUpdate) {
+                packet.modifier.writeDefaults()
+            }
             packet.strings.write(0, getPlayerIdentifier(player)) // Objective Name
             packet.integers.write(0, 1) // Mode 1: Remove Scoreboard
             protocolManager.sendServerPacket(player, packet)
@@ -72,7 +80,9 @@ class ProtocolScoreboard : ScoreboardHandler() {
         playerBoards[player.uniqueId]?.also { playerBoard ->
             if (afterTrailsAndTailsDot4Update) {
                 val packet = PacketContainer(PacketType.Play.Server.SCOREBOARD_OBJECTIVE)
-                packet.modifier.writeDefaults()
+                if (!afterTrickyTrialsUpdate) {
+                    packet.modifier.writeDefaults()
+                }
                 packet.strings.write(0, getPlayerIdentifier(player)) // Objective Name
                 packet.integers.write(0, 2) // Mode 2: Update Display Name
                 if (afterAquaticUpdate) {
@@ -94,7 +104,11 @@ class ProtocolScoreboard : ScoreboardHandler() {
                 } else packet.integers.write(1, 1) // Mode - remove team
                 protocolManager.sendServerPacket(player, packet)
 
-                if (afterTrailsAndTailsDot4Update) {
+                if (afterTrickyTrialsUpdate) {
+                    packet = PacketContainer(PacketType.Play.Server.RESET_SCORE)
+                    packet.strings.write(0, scoreName) // Score Name
+                    packet.strings.write(1, getPlayerIdentifier(player)) // Objective Name
+                } else if (afterTrailsAndTailsDot4Update) {
                     // todo: temporary 1.20.4 compatibility fix
                     packet = PacketContainer(
                         PacketType.findCurrent(
@@ -121,7 +135,9 @@ class ProtocolScoreboard : ScoreboardHandler() {
         playerBoards[player.uniqueId]?.also { playerBoard ->
             if (title != null && playerBoard.title != title) {
                 val packet = PacketContainer(PacketType.Play.Server.SCOREBOARD_OBJECTIVE)
-                packet.modifier.writeDefaults()
+                if (!afterTrickyTrialsUpdate) {
+                    packet.modifier.writeDefaults()
+                }
                 packet.strings.write(0, getPlayerIdentifier(player)) // Objective Name
                 packet.integers.write(0, 2) // Mode 2: Update Display Name
                 if (afterAquaticUpdate) {
@@ -142,12 +158,24 @@ class ProtocolScoreboard : ScoreboardHandler() {
                 val scoreName = scoreToName(score)
 
                 var packet = PacketContainer(PacketType.Play.Server.SCOREBOARD_TEAM)
+
                 packet.modifier.writeDefaults()
                 packet.strings.write(0, scoreName) // Team Name
 
                 // Always split at 16 to improve version compatibility (players on 1.12 and older)
                 val splitText = splitScoreLine(value, 16, !afterAquaticUpdate)
-                if (afterCavesAndCliffsUpdate) {
+                if (afterTrickyTrialsUpdate) {
+                    packet.optionalTeamParameters.write(0, Optional.of(
+                        WrappedTeamParameters.newBuilder()
+                            .displayName(fromText(scoreName))
+                            .prefix(fromLegacyText(splitText.first))
+                            .suffix(fromLegacyText(splitText.second))
+                            .nametagVisibility("never")
+                            .collisionRule("never")
+                            .color(EnumWrappers.ChatFormatting.RESET)
+                            .build()
+                    ))
+                } else if (afterCavesAndCliffsUpdate) {
                     val optStruct: Optional<InternalStructure> = packet.optionalStructures.read(0)
                     if (optStruct.isPresent) {
                         val struct = optStruct.get()
@@ -183,7 +211,10 @@ class ProtocolScoreboard : ScoreboardHandler() {
                 protocolManager.sendServerPacket(player, packet)
 
                 packet = PacketContainer(PacketType.Play.Server.SCOREBOARD_SCORE)
-                packet.modifier.writeDefaults()
+                if (!afterTrickyTrialsUpdate) {
+                    // Defaults mess with nms.chat.Component
+                    packet.modifier.writeDefaults()
+                }
                 packet.strings.write(0, scoreName) // Score Name
                 packet.scoreboardActions.write(0, EnumWrappers.ScoreboardAction.CHANGE) // Action
                 packet.strings.write(1, getPlayerIdentifier(player)) // Objective Name
@@ -203,7 +234,10 @@ class ProtocolScoreboard : ScoreboardHandler() {
                 protocolManager.sendServerPacket(player, packet)
 
                 packet = PacketContainer(PacketType.Play.Server.SCOREBOARD_SCORE)
-                packet.modifier.writeDefaults()
+                if (!afterTrickyTrialsUpdate) {
+                    // Defaults mess with nms.chat.Component
+                    packet.modifier.writeDefaults()
+                }
                 packet.strings.write(0, scoreName) // Score Name
                 packet.scoreboardActions.write(0, EnumWrappers.ScoreboardAction.REMOVE) // Action
                 packet.strings.write(1, getPlayerIdentifier(player)) // Objective Name
