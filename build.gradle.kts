@@ -3,7 +3,7 @@ import org.apache.tools.ant.filters.ReplaceTokens
 import java.io.ByteArrayOutputStream
 
 plugins {
-    id 'java-library'
+    `java-library`
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("io.papermc.hangar-publish-plugin") version "0.1.0"
     id("com.modrinth.minotaur") version "2.8.4"
@@ -25,7 +25,7 @@ repositories {
 
 dependencies {
     compileOnly("org.bukkit:bukkit:1.8.8-R0.1-SNAPSHOT")
-    compileOnly files("libs/ProtocolLib-5.4.0-SNAPSHOT.jar")
+    compileOnly(files("libs/ProtocolLib-5.4.0-SNAPSHOT.jar")) 
     compileOnly("me.clip:placeholderapi:2.11.6")
     compileOnly("be.maximvdw:MVdWPlaceholderAPI:3.1.1-SNAPSHOT") {
         exclude("org.spigotmc") // build error
