@@ -3,6 +3,7 @@ import org.apache.tools.ant.filters.ReplaceTokens
 import java.io.ByteArrayOutputStream
 
 plugins {
+    `java-library`
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("io.papermc.hangar-publish-plugin") version "0.1.0"
     id("com.modrinth.minotaur") version "2.8.4"
