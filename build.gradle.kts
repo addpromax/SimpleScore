@@ -24,7 +24,7 @@ repositories {
 
 dependencies {
     compileOnly("org.bukkit:bukkit:1.8.8-R0.1-SNAPSHOT")
-    compileOnly files('libs/ProtocolLib-5.4.0-SNAPSHOT.jar')
+    compileOnly files("libs/ProtocolLib-5.4.0-SNAPSHOT.jar")
     compileOnly("me.clip:placeholderapi:2.11.6")
     compileOnly("be.maximvdw:MVdWPlaceholderAPI:3.1.1-SNAPSHOT") {
         exclude("org.spigotmc") // build error
