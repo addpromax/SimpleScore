@@ -16,7 +16,6 @@ repositories {
     mavenCentral()
 
     maven(uri("https://hub.spigotmc.org/nexus/content/repositories/snapshots/"))
-    maven { url "https://repo.dmulloy2.net/repository/public/" }
     maven(uri("https://repo.extendedclip.com/content/repositories/placeholderapi/"))
     maven(uri("https://repo.mvdw-software.com/content/groups/public/"))
     maven(uri("https://nexus.neetgames.com/repository/maven-public/"))
